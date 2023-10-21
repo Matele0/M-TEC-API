@@ -39,6 +39,7 @@ def let_user_select_device( api, stationId ):
     print("Invalid #")
     return
   else:
+    api.deviceSn = devices[i][1]['deviceSn']
     return devices[i][0]
 
 #-----------------------------
@@ -128,7 +129,64 @@ def show_usage_data_month( api ):
                                               item["grid_load"], item["grid_feed"], 
                                               item["battery_load"], item["battery_feed"] ) )
     date += relativedelta(months=1)
+def set_inverter_hybrid_mode( api, stat_idx, dev_idx, mode ):
+  #stationId = let_user_select_station(api)
+  #deviceId = let_user_select_device(api, stationId)
 
+  stat_id=list(api.topology.keys())
+  deviceSn=api.topology[stat_id]['devices']
+  dev_id=list(deviceSn.keys())
+  deviceSn=deviceSn[dev_id[0]]['deviceSn']
+  mode = int(input("Select mode (1=normal, 2=eco, 3=backup, 4=emergency): "))
+  json_data=set_inverter_hybrid_mode( api, stat_idx, dev_idx, mode )
+
+
+  if json_data["code"] != '1000000':
+      print("Error: ", json_data["msg"])
+  else:
+      cm=json_data["data"]["hybirdworkmode"]["currentValue"]
+  if cm == "0101":
+      inv_mode='normal'
+  elif cm == "0102":
+      inv_mode='eco'
+  elif cm == "0103":
+      inv_mode='backup'
+  elif cm == "0104":
+      inv_mode='emergency'
+  print( inv_mode)
+        
+#-------------------------------
+def set_delivery_limit_switch(api):
+  stat_idx=0
+  dev_idx=0
+
+  mode = int(input("Select mode (0: disable 1: enable) "))
+  mode=api.set_delivery_limit_switch(stat_idx, dev_idx, mode )
+  print("Delivery Restricted Mode: ", mode)
+
+
+#-------------------------------
+def checkControlResult( api ):
+  #test if deviceId is no set
+  url = "deviceSetting/checkControlResult"    
+  print( "-------------------------------------" )
+  print( "Menu:")
+  print( "  1: Get Hybrid Mode" )
+  print( "  2: Get AntiCounterCurrent" )
+  opt = input("Please select: ")
+  stat_idx=0
+  dev_idx=0
+  if opt == "1": 
+    inv_mode=api.get_inverter_hybrid_mode(stat_idx, dev_idx)
+    print("Hybrid Mode: ", inv_mode)
+  elif opt == "2":
+
+    inv_mode =  api.get_delivery_limit_switch(stat_idx, dev_idx)
+    
+
+    print("Delivery Restricted Mode: ", inv_mode)
+
+  return
 #-------------------------------
 def main():
   api = MTECapi.MTECapi()
@@ -153,6 +211,50 @@ def main():
       show_usage_data_day(api)  
     elif opt == "5":
       show_usage_data_month(api)  
+    elif opt == "x" or opt == "X":  
+      break
+  
+  print( "Bye!")
+#-------------------------------
+
+
+
+
+#-------------------------------
+def main():
+  api = MTECapi.MTECapi()
+  
+
+  while True:
+    print( "-------------------------------------" )
+    print( "Menu:")
+    print( "  1: List system topology" )
+    print( "  2: List station data" )
+    print( "  3: List device data" )
+    print( "  4: Usage data (day)" )
+    print( "  5: Usage data (month)" )
+    print( "  6: Set Inverter Mode" )
+    print( "  7: Check Control Result")
+    print( "  8: Delivery Limitation")
+    print( "  x: Exit" )
+    opt = input("Please select: ")
+    if opt == "1": 
+      show_topology(api)
+    elif opt == "2":  
+      show_station_data(api)
+    elif opt == "3":  
+      show_device_data(api)
+    elif opt == "4":
+      show_usage_data_day(api)  
+    elif opt == "5":
+      show_usage_data_month(api)
+    elif opt == "6":
+      #print("Not implemented yet")   
+      set_inverter_hybrid_mode(api)
+    elif opt == "7":
+      checkControlResult(api)
+    elif opt == "8":
+      set_delivery_limit_switch(api)   
     elif opt == "x" or opt == "X":  
       break
   

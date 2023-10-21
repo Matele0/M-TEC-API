@@ -427,7 +427,125 @@ class MTECapi:
         except:
             logging.error( "Couldn't get devices for station '{}'".format( station_id ) )
         return devices
+    def set_inverter_hybrid_mode( api, stat_idx, dev_idx, mode ):
+        stat_id=list(api.topology.keys())
+        deviceSn=api.topology[stat_id[stat_idx]]['devices']
+        dev_id=list(deviceSn.keys())
+        deviceSn=deviceSn[dev_id[dev_idx]]['deviceSn']
+        
+        url = "deviceSetting/syncSendSetting"
+        payload ={
+        "deviceSn": deviceSn,
+        "sendSettingItemList": [
+        {
+            "settingCode": "hybirdworkmode",
+            "settingField": "HybirdWorkMode",
+            "settingValueType": "custom",
+            "settingAddress": "50000",
+            "settingValueCoeff": "1",
+            "value": "1#"+ str(mode)
+        }
+        ],
+        }
+        json_data = api._do_API_call( url, payload=payload, method="POST" )
+        return json_data
+    def get_inverter_hybrid_mode(api, stat_idx, dev_idx):
+        stat_id=list(api.topology.keys())
+        deviceSn=api.topology[stat_id[stat_idx]]['devices']
+        dev_id=list(deviceSn.keys())
+        deviceSn=deviceSn[dev_id[dev_idx]]['deviceSn']
+        url = "deviceSetting/checkControlResult"  
+        payload={
+        "deviceSn": deviceSn,
+        "settingHexDataList": [
+          {
+              "settingCode": "hybirdworkmode",
+              "settingField": "HybirdWorkMode",
+              "settingHexValue": "0101"
+          }
+        ]
     
+            }
+        json_data = api._do_API_call( url, payload=payload, method="POST" )
+        #print(json_data)
+
+        return json_data
+    def set_delivery_limit_switch(api, stat_idx, dev_idx, mode ):
+        stat_id=list(api.topology.keys())
+        deviceSn=api.topology[stat_id[stat_idx]]['devices']
+        dev_id=list(deviceSn.keys())
+        deviceSn=deviceSn[dev_id[dev_idx]]['deviceSn']
+        url="deviceSetting/syncSendSetting"
+        payload={
+        "deviceSn": deviceSn,
+        "sendSettingItemList": [
+        {
+        #"settingId": 4,
+        "settingCode": "anticountercurrentstartstop",
+        "settingField": "AntiCounterCurrentStartStop",
+        "settingValueType": "boolean",
+        #"settingName": "Export limit switch",
+        #"settingNameCode": "5000004",
+        "settingAddress": "25100",
+        #"settingValueDesc": "",
+        #"settingValueRule": "null",
+        #"settingValueUnit": " ",
+        "settingValueCoeff": "1",
+        #"settingShowCoeff": "1",
+        #"preJudgment": "showAntiReflux",
+        #"allowAuth": 1,
+        #"settable": "true",
+        #"forwardUrl": "null",
+        #"forwardPcid": "null",
+        #"extraDesc": "",
+        "value": str(mode)
+        }
+        ],
+    
+        }
+        print(payload)
+
+
+
+
+        json_data = api._do_API_call( url, payload=payload, method="POST" )
+        print(json_data)
+        if json_data["code"] != '1000000':
+            print("Error: ", json_data["msg"])
+        else:
+           set=json_data['data'][0]['settingHexValue']
+           mode=json_data['data'][0]['settingCode']
+        return set
+
+    def get_delivery_limit_switch(api, stat_idx, dev_idx):
+        stat_id=list(api.topology.keys())
+        deviceSn=api.topology[stat_id[stat_idx]]['devices']
+        dev_id=list(deviceSn.keys())
+        deviceSn=deviceSn[dev_id[dev_idx]]['deviceSn']
+        url = "deviceSetting/checkControlResult"  
+        payload={
+        "deviceSn": deviceSn,
+        "settingHexDataList": [
+            {
+                "settingCode": "anticountercurrentstartstop",
+                "settingField": "AntiCounterCurrentStartStop",
+                "settingHexValue": "0000"
+            }
+        ],
+    
+            }
+        json_data = api._do_API_call( url, payload=payload, method="POST" )
+        #print(json_data)
+        if json_data["code"] != '1000000':
+            print("Error: ", json_data["msg"])
+        else:
+            cm=json_data["data"]["anticountercurrentstartstop"]["currentValue"]
+        if cm == "0001":
+            inv_mode='active'
+        elif cm == "0000":
+            inv_mode='inactive'
+        return inv_mode
+        
 #-------------------------------------------------
 if __name__ == "__main__":
     logging.basicConfig( level=logging.DEBUG, format="%(asctime)s : %(levelname)s : %(message)s" )
