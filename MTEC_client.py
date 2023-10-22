@@ -39,7 +39,7 @@ def let_user_select_device( api, stationId ):
     print("Invalid #")
     return
   else:
-    api.deviceSn = devices[i][1]['deviceSn']
+    #api.deviceSn = devices[i][1]['deviceSn']
     return devices[i][0]
 
 #-----------------------------
@@ -189,7 +189,7 @@ def checkControlResult( api ):
   return
 #-------------------------------
 def main():
-  api = MTECapi.MTECapi()
+  #api = MTECapi.MTECapi()
 
   while True:
     print( "-------------------------------------" )

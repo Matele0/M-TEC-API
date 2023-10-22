@@ -7,6 +7,7 @@ from config import cfg
 import MTECapi
 import logging
 import time
+import json
 
 try:
   import paho.mqtt.client as mqttcl
@@ -22,6 +23,17 @@ def on_mqtt_message(mqttclient, userdata, message):
   try:
     msg = message.payload.decode("utf-8")
     topic = message.topic.split("/")
+    print("MQTT message received: {} {}".format(topic, msg))
+    command=topic[-1]
+    if command == "ChargeBattery":
+      if msg == 'True':
+        print('Starting battery charge')
+        print('Setting HybridMode to UPS') 
+      else:
+        print('Stopping battery charge')
+        print('Setting HybridMode to General')
+    elif command == "DeliveryLimitSwitch":
+      print('DeliveryLimitSwitch changed')
   except Exception as e:
     logging.warning("Error while handling MQTT message: {}".format(str(e)))
 
@@ -32,6 +44,7 @@ def mqtt_start():
     client.connect(cfg['MQTT_SERVER'], cfg['MQTT_PORT'], keepalive = 60) 
     client.on_connect = on_mqtt_connect
     client.on_message = on_mqtt_message
+    client.subscribe(cfg['MQTT_TOPIC'] + '/RemoteControl/#')
     client.loop_start()
     logging.info('MQTT server started')
     return client
@@ -122,9 +135,9 @@ def read_MTEC_device_data( api, device_id ):
   pvdata["inverter_C_P"] = normalize(data["grid"]["Invt_C_P"])
   pvdata["inverter_C_V"] = data["grid"]["Vgrid_PhaseC"]
   pvdata["inverter_C_I"] = data["grid"]["Igrid_PhaseC"]
-  pvdata["grid_A_P"] = normalize(data["grid"]["PmeterPhaseA"])
-  pvdata["grid_B_P"] = normalize(data["grid"]["PmeterPhaseB"])
-  pvdata["grid_C_P"] = normalize(data["grid"]["PmeterPhaseC"])
+  #pvdata["grid_A_P"] = normalize(data["grid"]["PmeterPhaseA"])
+  #pvdata["grid_B_P"] = normalize(data["grid"]["PmeterPhaseB"])
+  #pvdata["grid_C_P"] = normalize(data["grid"]["PmeterPhaseC"])
 
   for string in data["PV"]:
     pvdata["PV_"+string["name"]["value"]+"_P"] = normalize(string["power"]["value"])
